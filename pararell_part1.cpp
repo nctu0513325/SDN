@@ -44,3 +44,38 @@ void clampedExpVector(float *values, int *exponents, float *output, int N)
     _pp_vstore_float(output + i, result, maskAll);
   }
 }
+float arraySumVector(float *values, int N)
+{
+  __pp_vec_float x, sum;
+  __pp_mask maskAll = _pp_init_ones();
+
+  // 初始化總和向量為 0
+  sum = _pp_vset_float(0.0f);
+
+  // 遍歷數組，以 VECTOR_WIDTH 為步長
+  for (int i = 0; i < N; i += VECTOR_WIDTH)
+  {
+    // 從 values 數組中加載當前批次的浮點數到向量 x 中
+    _pp_vload_float(x, values + i, maskAll);
+    // 將 x 向量中的元素累加到 sum 向量中
+    _pp_vadd_float(sum, sum, x, maskAll);
+  }
+
+  // 向量內部求和，將 sum 向量中的所有元素相加
+  for (int width = VECTOR_WIDTH; width > 1; width /= 2)
+  {
+    __pp_vec_float temp;
+    // 水平加法，將相鄰元素相加
+    _pp_hadd_float(sum, sum);
+    // 交錯存儲，將加法結果存儲到 temp 向量中
+    _pp_interleave_float(temp, sum);
+    // 將 temp 向量中的值移動到 sum 向量中
+    _pp_vmove_float(sum, temp, maskAll);
+  }
+
+  // 將最終的總和存儲到 result 中
+  float result;
+  _pp_vstore_float(&result, sum, maskAll);
+
+  return result;
+}
