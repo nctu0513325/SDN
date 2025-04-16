@@ -64,7 +64,7 @@ services:
       - NET_ADMIN
       - NET_BROADCAST
     networks:
-      R4h3br:
+      R3h3br:
         ipv4_address: 172.22.0.3
     entrypoint: ["/bin/sh","-c"]
     command:
@@ -135,7 +135,7 @@ services:
       - NET_ADMIN
       - NET_BROADCAST
     networks:
-      R3h4br:
+      R3h3br:
         ipv4_address: 172.22.0.2
     volumes:
       - ./config/R3/zebra.conf:/etc/quagga/zebra.conf
@@ -165,7 +165,7 @@ services:
       - NET_ADMIN
       - NET_BROADCAST
     networks:
-      R5R4br:
+      R4R5br:
         ipv4_address: 172.23.0.3
       R5h4br:
         ipv4_address: 172.24.0.2
@@ -192,7 +192,7 @@ networks:
     ipam:
       config:
         - subnet: 172.21.0.0/16
-  R3h4br:
+  R3h3br:
     name: R3h3br
     driver: bridge
     ipam:
