@@ -123,8 +123,8 @@ services:
       R2R1br:
         ipv4_address: 172.19.0.3
     volumes:
-      - ./config/R2/zebra.conf:/etc/quagga/zebra.conf
-      - ./config/R2/bgpd.conf:/etc/quagga/bgpd.conf
+      - ./config/daemons:/etc/frr/daemons
+      - ./config/R2/frr.conf:/etc/frr/frr.conf
   R3:
     image: frrouting/frr-debian
     container_name: R3
@@ -138,8 +138,8 @@ services:
       R3h3br:
         ipv4_address: 172.22.0.2
     volumes:
-      - ./config/R3/zebra.conf:/etc/quagga/zebra.conf
-      - ./config/R3/bgpd.conf:/etc/quagga/bgpd.conf
+      - ./config/daemons:/etc/frr/daemons
+      - ./config/R3/frr.conf:/etc/frr/frr.conf
   R4:
     image: frrouting/frr-debian
     container_name: R4
@@ -153,8 +153,8 @@ services:
       R4R5br:
         ipv4_address: 172.23.0.2
     volumes:
-      - ./config/R4/zebra.conf:/etc/quagga/zebra.conf
-      - ./config/R4/bgpd.conf:/etc/quagga/bgpd.conf
+      - ./config/daemons:/etc/frr/daemons
+      - ./config/R4/frr.conf:/etc/frr/frr.conf 
   R5:
     image: frrouting/frr-debian
     container_name: R5
@@ -170,8 +170,8 @@ services:
       R5h4br:
         ipv4_address: 172.24.0.2
     volumes:
-      - ./config/R5/zebra.conf:/etc/quagga/zebra.conf
-      - ./config/R5/bgpd.conf:/etc/quagga/bgpd.conf
+      - ./config/daemons:/etc/frr/daemons
+      - ./config/R5/frr.conf:/etc/frr/frr.conf
 
 networks:
   R1h1br:
