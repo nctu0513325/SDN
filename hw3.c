@@ -1,3 +1,40 @@
+#include "bfs.h"
+#include <cstdlib>
+#include <omp.h>
+#include <vector>
+#include "../common/graph.h"
+
+#ifdef VERBOSE
+#include "../common/CycleTimer.h"
+#include <stdio.h>
+#endif
+
+constexpr int ROOT_NODE_ID = 0;
+constexpr int NOT_VISITED_MARKER = -1;
+
+// 原有的top-down相關函數保持不變
+
+void bottom_up_step(Graph g, bool* frontier, bool* new_frontier, int* distances, int level)
+{
+    #pragma omp parallel for
+    for (int i = 0; i < g->num_nodes; i++)
+    {
+        if (distances[i] == NOT_VISITED_MARKER)
+        {
+            for (int j = g->incoming_starts[i]; j < (i == g->num_nodes - 1 ? g->num_edges : g->incoming_starts[i + 1]); j++)
+            {
+                int incoming = g->incoming_edges[j];
+                if (frontier[incoming])
+                {
+                    distances[i] = level;
+                    new_frontier[i] = true;
+                    break;
+                }
+            }
+        }
+    }
+}
+
 void bfs_bottom_up(Graph graph, solution* sol)
 {
     bool* frontier = new bool[graph->num_nodes]();
@@ -16,33 +53,18 @@ void bfs_bottom_up(Graph graph, solution* sol)
     while (!done)
     {
         done = true;
+        bottom_up_step(graph, frontier, new_frontier, sol->distances, level);
 
         #pragma omp parallel for reduction(&&:done)
         for (int i = 0; i < graph->num_nodes; i++)
         {
-            if (sol->distances[i] == NOT_VISITED_MARKER)
+            if (new_frontier[i])
             {
-                for (int j = graph->incoming_starts[i]; j < (i == graph->num_nodes - 1 ? graph->num_edges : graph->incoming_starts[i + 1]); j++)
-                {
-                    int incoming = graph->incoming_edges[j];
-                    if (frontier[incoming])
-                    {
-                        sol->distances[i] = level;
-                        new_frontier[i] = true;
-                        done = false;
-                        break;
-                    }
-                }
+                done = false;
+                frontier[i] = true;
+                new_frontier[i] = false;
             }
         }
-
-        #pragma omp parallel for
-        for (int i = 0; i < graph->num_nodes; i++)
-        {
-            frontier[i] = new_frontier[i];
-            new_frontier[i] = false;
-        }
-
         level++;
     }
 
@@ -86,7 +108,6 @@ void bfs_hybrid(Graph graph, solution* sol)
         if (use_top_down)
         {
             vertex_set_clear(new_frontier);
-
             #pragma omp parallel
             {
                 VertexSet local_new_frontier;
@@ -129,30 +150,17 @@ void bfs_hybrid(Graph graph, solution* sol)
         }
         else
         {
+            bottom_up_step(graph, bottom_up_frontier, bottom_up_new_frontier, sol->distances, level);
+
             #pragma omp parallel for reduction(&&:done)
             for (int i = 0; i < graph->num_nodes; i++)
             {
-                if (sol->distances[i] == NOT_VISITED_MARKER)
+                if (bottom_up_new_frontier[i])
                 {
-                    for (int j = graph->incoming_starts[i]; j < (i == graph->num_nodes - 1 ? graph->num_edges : graph->incoming_starts[i + 1]); j++)
-                    {
-                        int incoming = graph->incoming_edges[j];
-                        if (bottom_up_frontier[incoming])
-                        {
-                            sol->distances[i] = level;
-                            bottom_up_new_frontier[i] = true;
-                            done = false;
-                            break;
-                        }
-                    }
+                    done = false;
+                    bottom_up_frontier[i] = true;
+                    bottom_up_new_frontier[i] = false;
                 }
-            }
-
-            #pragma omp parallel for
-            for (int i = 0; i < graph->num_nodes; i++)
-            {
-                bottom_up_frontier[i] = bottom_up_new_frontier[i];
-                bottom_up_new_frontier[i] = false;
             }
 
             vertex_set_clear(frontier);
