@@ -34,7 +34,7 @@ void host_fe(float upper_x, float upper_y, float lower_x, float lower_y, int *im
     int *device_img;
     cudaMalloc(&device_img, res_x * res_y * sizeof(int));
 
-    dim3 threadsPerBlock(32, 32);  // 增加线程块大小
+    dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((res_x + threadsPerBlock.x - 1) / threadsPerBlock.x, (res_y + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     mandel_kernel<<<numBlocks, threadsPerBlock>>>(lower_x, lower_y, step_x, step_y, device_img, res_x, res_y, max_iterations);
