@@ -56,7 +56,7 @@ void host_fe(float upper_x, float upper_y, float lower_x, float lower_y, int *im
     cudaMallocPitch(&device_img, &pitch, res_x * sizeof(int), res_y);
 
     dim3 threadsPerBlock(16, 16);  // 使用16x16的线程块大小
-    dim3 numBlocks((res_x + threadsPerBlock.x - 1) / threadsPerBlock.x, (res_y + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((res_x + threadsPerBlock.x * 4 - 1) / (threadsPerBlock.x * 4), (res_y + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     mandel_kernel<<<numBlocks, threadsPerBlock>>>(lower_x, lower_y, step_x, step_y, device_img, pitch, res_x, res_y, max_iterations);
 
