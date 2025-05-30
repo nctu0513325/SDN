@@ -91,3 +91,32 @@ void host_fe(int filter_width,
     clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
 }
+
+
+__kernel void convolution(
+    __global const float* input,
+    __global float* output,
+    __global const float* filter,
+    int image_height,
+    int image_width,
+    int filter_width)
+{
+    int y = get_global_id(0);
+    int x = get_global_id(1);
+
+    if (y >= image_height || x >= image_width) return;
+
+    int half = filter_width / 2;
+    float sum = 0.0f;
+
+    for (int fy = 0; fy < filter_width; fy++) {
+        for (int fx = 0; fx < filter_width; fx++) {
+            int iy = y + fy - half;
+            int ix = x + fx - half;
+            if (iy >= 0 && iy < image_height && ix >= 0 && ix < image_width) {
+                sum += input[iy * image_width + ix] * filter[fy * filter_width + fx];
+            }
+        }
+    }
+    output[y * image_width + x] = sum;
+}
