@@ -2,7 +2,6 @@
 #include "helper.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <CL/cl.h>
 
 void host_fe(int filter_width,
              float *filter,
@@ -18,14 +17,14 @@ void host_fe(int filter_width,
     int filter_size = filter_width * filter_width;
     int image_size = image_height * image_width;
 
-    // 1. 创建命令队列
+    // 1. 建立命令佇列
     cl_command_queue queue = clCreateCommandQueue(*context, *device, 0, &status);
     if (status != CL_SUCCESS) {
         fprintf(stderr, "Failed to create command queue: %d\n", status);
         exit(1);
     }
 
-    // 2. 创建缓冲区
+    // 2. 建立緩衝區
     cl_mem d_input = clCreateBuffer(*context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                     sizeof(float) * image_size, input_image, &status);
     if (status != CL_SUCCESS) {
@@ -47,14 +46,14 @@ void host_fe(int filter_width,
         exit(1);
     }
 
-    // 3. 创建kernel
+    // 3. 建立 kernel
     cl_kernel kernel = clCreateKernel(*program, "convolution", &status);
     if (status != CL_SUCCESS) {
         fprintf(stderr, "Failed to create kernel: %d\n", status);
         exit(1);
     }
 
-    // 4. 设置kernel参数
+    // 4. 設定 kernel 參數
     status  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &d_input);
     status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &d_output);
     status |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &d_filter);
@@ -66,32 +65,31 @@ void host_fe(int filter_width,
         exit(1);
     }
 
-    // 5. 启动kernel
-    size_t global[2] = { (size_t)image_height, (size_t)image_width };
+    // 5. 啟動 kernel
+    size_t global[2] = { (size_t)image_width, (size_t)image_height }; // x, y
     status = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global, NULL, 0, NULL, NULL);
     if (status != CL_SUCCESS) {
         fprintf(stderr, "Failed to enqueue kernel: %d\n", status);
         exit(1);
     }
 
-    // 6. 等待kernel执行完毕
+    // 6. 等待 kernel 執行完畢
     clFinish(queue);
 
-    // 7. 读取结果
+    // 7. 讀回結果
     status = clEnqueueReadBuffer(queue, d_output, CL_TRUE, 0, sizeof(float) * image_size, output_image, 0, NULL, NULL);
     if (status != CL_SUCCESS) {
         fprintf(stderr, "Failed to read output buffer: %d\n", status);
         exit(1);
     }
 
-    // 8. 释放资源
+    // 8. 釋放資源
     clReleaseMemObject(d_input);
     clReleaseMemObject(d_output);
     clReleaseMemObject(d_filter);
     clReleaseKernel(kernel);
     clReleaseCommandQueue(queue);
 }
-
 
 __kernel void convolution(
     __global const float* input,
@@ -101,10 +99,10 @@ __kernel void convolution(
     int image_width,
     int filter_width)
 {
-    int y = get_global_id(0);
-    int x = get_global_id(1);
+    int x = get_global_id(0); // column
+    int y = get_global_id(1); // row
 
-    if (y >= image_height || x >= image_width) return;
+    if (x >= image_width || y >= image_height) return;
 
     int half = filter_width / 2;
     float sum = 0.0f;
