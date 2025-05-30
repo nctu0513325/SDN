@@ -100,10 +100,6 @@ __kernel void convolution(
     int image_width,
     int filter_width)
 {
-    // debug
-    if (get_global_id(0) == 0 && get_global_id(1) == 0)
-        printf("filter_width = %d\n", filter_width);
-
     int x = get_global_id(0);
     int y = get_global_id(1);
 
