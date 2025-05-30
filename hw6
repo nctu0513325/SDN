@@ -54,6 +54,7 @@ void host_fe(int filter_width,
     }
 
     // 4. 設定 kernel 參數
+    printf("filter_width = %d\n", filter_width); // debug
     status  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &d_input);
     status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &d_output);
     status |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &d_filter);
@@ -99,8 +100,12 @@ __kernel void convolution(
     int image_width,
     int filter_width)
 {
-    int x = get_global_id(0); // column
-    int y = get_global_id(1); // row
+    // debug
+    if (get_global_id(0) == 0 && get_global_id(1) == 0)
+        printf("filter_width = %d\n", filter_width);
+
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 
     if (x >= image_width || y >= image_height) return;
 
